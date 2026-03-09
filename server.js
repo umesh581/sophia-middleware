@@ -22,10 +22,16 @@ const CALENDLY_EVENT_URI = process.env.CALENDLY_EVENT_URI;   // e.g. https://api
 const PORT               = process.env.PORT || 3000;
 
 // ── Sanity check on startup ───────────────────────────────────
-if (!CALENDLY_TOKEN || !CALENDLY_EVENT_URI) {
-  console.error("❌  Missing CALENDLY_TOKEN or CALENDLY_EVENT_URI environment variables.");
-  console.error("    Set them in your Render dashboard under Environment.");
+if (!CALENDLY_TOKEN) {
+  console.error("❌  Missing CALENDLY_TOKEN environment variable.");
+  console.error("    Set it in your Render dashboard under Environment.");
   process.exit(1);
+}
+
+if (!CALENDLY_EVENT_URI) {
+  console.warn("⚠️   CALENDLY_EVENT_URI not set yet.");
+  console.warn("    Visit /setup in your browser to find the correct URI.");
+  console.warn("    The /setup and /health endpoints will work — /api routes will not.");
 }
 
 const calendly = axios.create({
