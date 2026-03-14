@@ -187,10 +187,6 @@ app.post("/api/book", async (req, res) => {
       location: {
         kind: "zoom_conference",
       },
-      tracking: {
-        utm_source: "sophia_voice_agent",
-        utm_medium: "outbound_call",
-      },
     };
 
     const bookResponse = await calendly.post("/invitees", bookPayload);
