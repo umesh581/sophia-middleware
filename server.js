@@ -75,7 +75,7 @@ app.get("/api/available-slots", async (req, res) => {
 
   try {
     // Fetch available times for the next 7 days
-    const start = dayjs().utc().toISOString();
+    const start = dayjs().utc().add(2, "minute").toISOString();
     const end   = dayjs().utc().add(7, "day").toISOString();
 
     const response = await calendly.get("/event_type_available_times", {
