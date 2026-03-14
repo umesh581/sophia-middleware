@@ -174,55 +174,27 @@ app.post("/api/book", async (req, res) => {
   const full_name = last_name ? `${first_name} ${last_name}` : first_name;
 
   try {
-    // Step 1: Find the scheduled event UUID for this exact start time
-    const eventsResponse = await calendly.get("/scheduled_events", {
-      params: {
-        event_type:      CALENDLY_EVENT_URI,
-        min_start_time:  start_time_utc,
-        max_start_time:  start_time_utc,
-        status:          "active",
+    // Calendly Scheduling API — correct endpoint per official docs
+    // POST https://api.calendly.com/invitees
+    const bookPayload = {
+      event_type:  CALENDLY_EVENT_URI,
+      start_time:  start_time_utc,
+      invitee: {
+        name:     full_name,
+        email:    email,
+        timezone: safe_tz,
       },
-    });
-
-    let eventUUID = null;
-    const existingEvents = eventsResponse.data.collection || [];
-
-    if (existingEvents.length > 0) {
-      // Slot already has a scheduled event — get its UUID
-      const eventUri = existingEvents[0].uri;
-      eventUUID = eventUri.split("/").pop();
-    } else {
-      // Step 2: No event yet — create one via the Scheduling API
-      // POST to /scheduled_events (Calendly Scheduling API)
-      const createResponse = await calendly.post("/scheduled_events", {
-        event_type_uri: CALENDLY_EVENT_URI,
-        start_time:     start_time_utc,
-      });
-      const eventUri = createResponse.data.resource?.uri;
-      eventUUID = eventUri ? eventUri.split("/").pop() : null;
-    }
-
-    if (!eventUUID) {
-      throw new Error("Could not get event UUID from Calendly");
-    }
-
-    // Step 3: Create the invitee on the scheduled event
-    const inviteePayload = {
-      name:     full_name,
-      email:    email,
-      timezone: safe_tz,
+      location: {
+        kind: "zoom_conference",
+      },
+      tracking: {
+        utm_source: "sophia_voice_agent",
+        utm_medium: "outbound_call",
+      },
     };
 
-    if (phone) {
-      inviteePayload.text_reminder_number = phone;
-    }
-
-    const inviteeResponse = await calendly.post(
-      `/scheduled_events/${eventUUID}/invitees`,
-      inviteePayload
-    );
-
-    const invitee         = inviteeResponse.data.resource || inviteeResponse.data;
+    const bookResponse = await calendly.post("/invitees", bookPayload);
+    const invitee           = bookResponse.data.resource || bookResponse.data;
     const confirmed_display = formatSlot(start_time_utc, safe_tz);
 
     return res.json({
