@@ -45,7 +45,7 @@ const calendly = axios.create({
 // ── Helper: format a UTC ISO string into a human-readable slot ─
 function formatSlot(isoString, timezone) {
   const safe_tz = timezone || "America/New_York";
-  return dayjs(isoString).tz(safe_tz).format("dddd [at] h:mm A z");
+  return dayjs(isoString).tz(safe_tz).format("dddd [at] h:mm A") + " " + tzLabel(safe_tz);
   // e.g. "Tuesday at 2:00 PM ET"
 }
 
