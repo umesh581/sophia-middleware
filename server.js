@@ -187,6 +187,13 @@ app.post("/api/book", async (req, res) => {
       location: {
         kind: "zoom_conference",
       },
+      questions_and_answers: [
+        {
+          question:  "Phone Number",
+          answer:    phone || "+10000000000",
+          position:  0,
+        }
+      ],
     };
 
     const bookResponse = await calendly.post("/invitees", bookPayload);
@@ -219,6 +226,28 @@ app.post("/api/book", async (req, res) => {
       message: "Booking failed. Please try again.",
       error:   detail,
     });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+//  GET /questions  — see required questions on the event type
+// ─────────────────────────────────────────────────────────────
+app.get("/questions", async (req, res) => {
+  try {
+    const uuid = CALENDLY_EVENT_URI.split("/").pop();
+    const response = await calendly.get(`/event_types/${uuid}`);
+    const questions = response.data.resource?.custom_questions || [];
+    return res.json({
+      event_name: response.data.resource?.name,
+      questions: questions.map(q => ({
+        name:     q.name,
+        type:     q.type,
+        required: q.required,
+        position: q.position,
+      }))
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.response?.data || err.message });
   }
 });
 
